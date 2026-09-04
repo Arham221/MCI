@@ -18,9 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdarg.h" // For variadic argument macros
-#include "stdio.h"
-#include "string.h"
+#include "stm32f3xx_hal_gpio.h"
+#include "stdlib.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -46,8 +46,6 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
 
-UART_HandleTypeDef huart2;
-
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
@@ -59,7 +57,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_USB_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -68,6 +65,32 @@ static void MX_USB_PCD_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// My Lab01 starts from here
+// index 0=a, 1=b, 2=c, 3=d, 4=e, 5=f, 6=g
+uint16_t segment_pins[7] = {
+    GPIO_PIN_10, // a
+    GPIO_PIN_11, // b
+    GPIO_PIN_15, // c
+    GPIO_PIN_12, // d
+    GPIO_PIN_13, // e
+    GPIO_PIN_8,  // f
+    GPIO_PIN_9   // g
+};
+
+// Common anode patterns (bit order gfedcba, 0 = segment ON) — Table 8.5 in manual
+uint8_t segment_map[16] = {
+    0x40, 0x79, 0x24, 0x30, 0x19, 0x12, 0x02, 0x78,  // 0-7
+    0x00, 0x10, 0x08, 0x03, 0x46, 0x21, 0x06, 0x0E   // 8-F
+};
+
+void display_number(uint8_t num) {
+    if (num > 15) return;
+    uint8_t pattern = segment_map[num];
+    for (int i = 0; i < 7; i++) {
+        HAL_GPIO_WritePin(GPIOD, segment_pins[i], ((pattern >> i) & 0x01) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    }
+}
+//Lab01 ends here
 /* USER CODE END 0 */
 
 /**
@@ -78,7 +101,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+int8_t counter = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,164 +124,72 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
-  MX_USART2_UART_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
-//MY TASK01
+  //task2 starts
+// uint8_t student_id[] = {1, 0, 3, 3, 1};
+// uint8_t id_index = 0;
 
-void myPrintf(const char *fmt, ...) {
-    // TODO: Step 1 - Declare and initialize a character buffer.
-    char buffer[100];
+//task2 ends
 
-    // TODO: Step 2 - Initialize the variadic argument list.
-    va_list args;
-    va_start(args, fmt);
-
-    // TODO: Step 3 - Format the final string using vsnprintf.
-    vsnprintf(buffer, sizeof(buffer), fmt, args);
-    va_end(args);
-
-    // TODO: Step 4 - Transmit the string over UART using HAL_UART_Transmit.
-    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-};
-int x = 42;
-int y = 314;
-myPrintf("Value of x = %d, y = %d \r\n", x, y);
-
-
-
-//MY TASK 02
-int a = 5;
-int b = 3;
-int lhs = 0;
-int rhs = 0;
-
-
-
-lhs = (a+b)*(a+b);
-rhs = a*a + 2*a*b + b*b;
-myPrintf("LHS = %d, RHS = %d \r\n", lhs, rhs);
-
-  if (lhs == rhs) {
-    myPrintf("The identity holds true.\r\n");
-  } else {
-    myPrintf("The identity does not hold true.\r\n");
-  }
-
-
-//MY TASK 03
-char str[] = "Microcontrollers";
-    char original[50];
-    strcpy(original, str); // Keep a copy for final verification
-    
-    // (b) Define a numerical encryption key 
-    int key = 10331; 
-    int shift = key % 256;
-    
-    myPrintf("Original string: %s\r\n", str);
-    
-    // (c) Encrypt each character by shifting its ASCII value
-    for (int i = 0; i < strlen(str); i++) {
-        str[i] = str[i] + shift;
-    }
-    
-    // (d) Print the encrypted string
-    myPrintf("Encrypted string: %s\r\n", str);
-    
-    // (e) Decrypt it by reversing the operation
-    for (int i = 0; i < strlen(str); i++) {
-        str[i] = str[i] - shift;
-    }
-    
-    // (f) Print the decrypted string and confirm it matches the original
-    myPrintf("Decrypted string: %s\r\n", str);
-    
-    if (strcmp(str, original) == 0) 
-    {
-        myPrintf("Verification: Match confirmed.\r\n");
-    } 
-    else 
-    {
-        myPrintf("Verification: Match failed.\r\n");
-    }
-//MY TASK 04
-int A[2][2] = {
-        {1, 2},
-        {3, 4}
-    };
-    
-    int B[2][2] = {
-        {5, 6},
-        {7, 8}
-    };
-    
-    int C[2][2] = {0}; // STORING THE RESULT HERE 
-
-    // (b) Multiply the matrices using nested loops
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < 2; k++) {
-                C[i][j] += A[i][k] * B[k][j];
-            }
-        }
-    }
-
-    // (c) Printing all three matrices: A, B, and the resultant C
-    myPrintf("Matrix A:\r\n");
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            myPrintf("%d ", A[i][j]);
-        }
-        myPrintf("\r\n");
-    }
-
-    myPrintf("Matrix B:\r\n");
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            myPrintf("%d ", B[i][j]);
-        }
-        myPrintf("\r\n");
-    }
-
-    myPrintf("Matrix C (A*B):\r\n");
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            myPrintf("%d ", C[i][j]);
-        }
-        myPrintf("\r\n");
-    }
-//MY TASK 05
-   myPrintf("Armstrong Numbers between 100 and 999:\r\n");
-
-    // (a) Use a for loop to iterate through the range 100 to 999.
-    for (int i = 100; i <= 999; i++) {
-        int temp = i;
-        int sum = 0;
-
-        // (b) Extract its three digits and compute the sum of their cubes.
-        while (temp > 0) {
-            int digit = temp % 10;
-            sum += (digit * digit * digit);
-            temp /= 10;
-        }
-
-        // Compare to the original number and (c) print if it matches.
-        if (sum == i) {
-            myPrintf("%d\r\n", i);
-        }
-    }
-
-      /* USER CODE END 2 */
-
+  /* USER CODE END 2 */
+srand(HAL_GetTick()); 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  display_number(segment_map[0]); // Display initial value
   while (1)
   {
+       // HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_RESET); 
+    //task01 starts
+
+//     for (uint8_t i = 0; i <= 15; i++) {
+//     display_number(i);
+//     HAL_Delay(2000);
+//     //Lab01 ends
+// }
+//task2 starts
+//     if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET) { // USER button pressed
+//     display_number(student_id[id_index]);
+//     id_index++;
+//     if (id_index >= sizeof(student_id)) {
+//         id_index = 0; // reset to first digit after last
+//     }
+//     HAL_Delay(300); // simple debounce — waits out the press/bounce
+//     while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET); // wait for release
+//     //task2 ends
+// }
     /* USER CODE END WHILE */
-    //MY TASK 0
-    //HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, World!\r\n", 15, HAL_MAX_DELAY);
+    //task3 starts
+//     if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET) { // USER button = +1
+//     counter++;
+//     if (counter > 15) counter = 0; // wrap around (single hex digit display)
+//     display_number(counter);
+//     HAL_Delay(300); // debounce
+//     while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET); // wait for release
+// }
+
+// if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) == GPIO_PIN_SET) { // External button = -1
+//     counter--;
+//     if (counter < 0) counter = 15; // wrap around
+//     display_number(counter);
+//     HAL_Delay(300); // debounce
+//     while (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_5) == GPIO_PIN_SET); // wait for release
+// }
+//task3 ends
+// if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET) { // USER button pressed
+//     // Generate a pseudo-random number from 0 to 9 (or 0 to 15 for Hex)
+//     uint8_t random_digit = rand() % 10; // Change to % 16 for Hex (0-F)
+    
+//     display_number(random_digit);
+    
+//     HAL_Delay(300); // Debounce delay
+//     while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET); // Wait for release
+// }
+// task4 complete
+
     /* USER CODE BEGIN 3 */
-  }
+  } 
+  
   /* USER CODE END 3 */
 }
 
@@ -301,13 +232,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {Lab03
+  {
     Error_Handler();
   }
 }
@@ -328,7 +257,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.Timing = 0x00201D2B;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -401,41 +330,6 @@ static void MX_SPI1_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
-
-/**
   * @brief USB Initialization Function
   * @param None
   * @retval None
@@ -483,12 +377,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|LD4_Pin|LD3_Pin|LD5_Pin
                           |LD7_Pin|LD9_Pin|LD10_Pin|LD8_Pin
                           |LD6_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_15, GPIO_PIN_SET);
 
   /*Configure GPIO pins : DRDY_Pin MEMS_INT3_Pin MEMS_INT4_Pin MEMS_INT1_Pin
                            MEMS_INT2_Pin */
@@ -509,11 +411,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
+  /*Configure GPIO pins : B1_Pin PA1 */
+  GPIO_InitStruct.Pin = B1_Pin|GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD8 PD9 PD10 PD11
+                           PD12 PD13 PD15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
