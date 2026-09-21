@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f3xx_hal_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -91,6 +90,34 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  // Drives the motor forward at a specific speed (0 to 999)
+void  Motor_Forward(uint16_t speed) {
+    // Set PA1 HIGH and PA2 LOW for forward direction
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET); 
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+    
+    // Apply the speed to your timer channel[cite: 3]
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, speed);
+}
+
+// Drives the motor backward at a specific speed (0 to 999)
+void Motor_Backward(uint16_t speed) {
+    // Set PA1 LOW and PA2 HIGH for reverse direction[cite: 3]
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+    
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, speed);
+}
+
+// Stops the motor completely
+void Motor_Stop(void) {
+    // Set both direction pins LOW to coast to a stop[cite: 3]
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+    
+    // Drop duty cycle to 0
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+}
   //task1 begin
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   //task1 end    
@@ -106,6 +133,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //task2 begin
     Motor_Forward(500);  // Run forward at ~50% speed
     HAL_Delay(2000);     // Wait 2 seconds
     
@@ -117,22 +145,9 @@ int main(void)
     
     Motor_Stop();
     HAL_Delay(1000);
+    //task2 end
     //task1 begin
-    // Fade in: loop CCR from 0 to ARR
-    // volatile uint16_t i = 0;
-
-    // for (i = 0; i <= 999; i += 10) 
-    // {
-    //     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, i);
-    //     HAL_Delay(15); 
-    // }
-
-    // // Fade out: loop CCR from ARR back to 0
-    // for (uint16_t i = 999; i > 0; i -= 10) 
-    // {
-    //     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, i);
-    //     HAL_Delay(15); 
-    // }
+    
     // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pulse);
 //cont. task1
     // pulse += step;
@@ -141,7 +156,7 @@ int main(void)
 
     // HAL_Delay(5);   // keep frequency ≥1kHz so no visible flicker; this delay just controls fade speed
     //task1 end
-    //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+  
   }
   /* USER CODE END 3 */
 }
@@ -260,16 +275,27 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA1 PA2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PA1 PA2 PA3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PF4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -279,39 +305,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 /* USER CODE BEGIN 4 */
 
-// Drives the motor forward at a specific speed (0 to 999)
-void Motor_Forward(uint16_t speed) {
-    // Set PA1 HIGH and PA2 LOW for forward direction
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET); 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
-    
-    // Apply the speed to your timer channel[cite: 3]
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, speed);
-}
 
-// Drives the motor backward at a specific speed (0 to 999)
-void Motor_Backward(uint16_t speed) {
-    // Set PA1 LOW and PA2 HIGH for reverse direction[cite: 3]
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
-    
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, speed);
-}
 
-// Stops the motor completely
-void Motor_Stop(void) {
-    // Set both direction pins LOW to coast to a stop[cite: 3]
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
-    
-    // Drop duty cycle to 0
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
-}
-
-/* USER CODE END 4 */
-//task1 begin
-// HAL_TIM_PWM_Stop (&htim3 , TIM_CHANNEL_1 );
-//task1 end
 /* USER CODE END 4 */
 
 /**
