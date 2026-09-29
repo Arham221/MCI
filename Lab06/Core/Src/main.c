@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "main.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,6 +59,7 @@ uint32_t ic_diff = 0;
 uint8_t is_first_capture = 0;
 uint8_t print_flag2 = 0;
 float frequency2 = 0;
+char uart_buf[64];
 //task01 begin
 // #define SAMPLE_SIZE 10
 
@@ -65,17 +68,16 @@ float frequency2 = 0;
 // uint8_t edge_state = 0;        // 0 = waiting for 1st edge, 1 = waiting for 2nd edge
 // uint8_t print_flag = 0;
 // char uart_buf[64];
-// /* USER CODE END PV */
+/* USER CODE END PV */
 
-// /* Private function prototypes -----------------------------------------------*/
-// void SystemClock_Config(void);
-// static void MX_GPIO_Init(void);
-// static void MX_I2C1_Init(void);
-// static void MX_SPI1_Init(void);
-// static void MX_TIM2_Init(void);
-// static void MX_USART2_UART_Init(void);
-// static void MX_USB_PCD_Init(void);
-// task01 end
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_USB_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 //task01 begin
 // void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -111,7 +113,6 @@ float frequency2 = 0;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -151,7 +152,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //task02 begin
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);   // start input capture with interrupt
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -195,6 +195,7 @@ int main(void)
   //   }
   // }
   //task01 end
+  }
   /* USER CODE END 3 */
 }
 
@@ -410,7 +411,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
