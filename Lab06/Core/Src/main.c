@@ -123,13 +123,13 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //task03attempt02 begin
-#include <stdio.h>
+// #include <stdio.h>
 
-// Override the _write function to redirect printf to USART2
-int _write(int file, char *ptr, int len) {
-    HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY);
-    return len;
-}
+// // Override the _write function to redirect printf to USART2
+// int _write(int file, char *ptr, int len) {
+//     HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+//     return len;
+// }
 //task03attempt02 end
 /* USER CODE END 0 */
 
@@ -170,12 +170,12 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   // task03attempt02 begin
-  // 1. Start the PWM signal to turn on the transistor
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 65535);
+  // // 1. Start the PWM signal to turn on the transistor
+  // HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+  // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 65535);
 
-  // 2. Start the timer in POLLING mode 
-  HAL_TIM_IC_Start(&htim2, TIM_CHANNEL_1);
+  // // 2. Start the timer in POLLING mode 
+  // HAL_TIM_IC_Start(&htim2, TIM_CHANNEL_1);
   //task03attempt02 end
 
   //task02 begin
@@ -186,9 +186,8 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 65535);
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
 
-  // Raw hardware transmit to prove UART is alive
-  char test_msg[] = "Task 4 Initialized...\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)test_msg, strlen(test_msg), 100);
+  // Raw hardware transmit to prove UART works
+  // HAL_UART_Transmit(&huart2, (uint8_t*)test_msg, strlen(test_msg), 100);
   //task04attempt02 end
   /* USER CODE END 2 */
 
@@ -201,42 +200,41 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     //task03attempt02 begin
-    HAL_Delay(1000); // wait 1 second so it doesn't flood the terminal
 
-      uint32_t val1 = 0;
-      uint32_t val2 = 0;
-      uint32_t difference = 0;
+      // uint32_t val1 = 0;
+      // uint32_t val2 = 0;
+      // uint32_t difference = 0;
 
-      // 1. Wait (poll) for the FIRST encoder pulse flag
-      while (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC1) == RESET) {}
-      // Read the timer value (this automatically clears the flag)
-      val1 = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
+      // // 1. Wait (poll) for the FIRST encoder pulse flag
+      // while (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC1) == RESET) {}
+      // // Read the timer value (this automatically clears the flag)
+      // val1 = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
 
-      // 2. Wait (poll) for the SECOND encoder pulse flag
-      while (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC1) == RESET) {}
-      // Read the new timer value
-      val2 = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
+      // // 2. Wait (poll) for the SECOND encoder pulse flag
+      // while (__HAL_TIM_GET_FLAG(&htim2, TIM_FLAG_CC1) == RESET) {}
+      // // Read the new timer value
+      // val2 = HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
 
-      // 3. Calculate the time difference between pulses
-      if (val2 > val1) {
-          difference = val2 - val1;
-      } else {
-          // Handle timer overflow (Assuming TIM2 is 32-bit on STM32F3)
-          difference = (0xFFFFFFFF - val1) + val2 + 1;
-      }
+      // // 3. Calculate the time difference between pulses
+      // if (val2 > val1) {
+      //     difference = val2 - val1;
+      // } else {
+      //     // Handle timer overflow 
+      //     difference = (0xFFFFFFFF - val1) + val2 + 1;
+      // }
 
-      /// 4. Calculate Frequency and RPM
-      if (difference != 0) {
-          float refClock = 8000000.0; // Your timer clock
-          float frequency = refClock / difference;
-          float rpm = (frequency / 330.0) * 60.0;
+      // /// 4. Calculate Frequency and RPM
+      // if (difference != 0) {
+      //     float refClock = 4800000.0; // Your timer clock
+      //     float frequency = refClock / difference;
+      //     float rpm = (frequency / 330.0) * 60.0;
 
-          // Print the results to the terminal
-          // printf("IC Freq: %.2f Hz | RPM: %.2f\r\n", frequency, rpm);
-          printf("IC Freq: %d Hz | RPM: %d\r\n", (int)frequency, (int)rpm);
-      }
+      //     // Print the results to the terminal
+      //     // printf("IC Freq: %.2f Hz | RPM: %.2f\r\n", frequency, rpm);
+      //     printf("IC Freq: %d Hz | RPM: %d\r\n", (int)frequency, (int)rpm);
+      // }
 
-      HAL_Delay(50);
+      // HAL_Delay(50);
       //task03attempt02 end
     //task02 begin
     // if (print_flag2)
@@ -274,7 +272,7 @@ int main(void)
   //task04attempt02 begin
   if (data_ready == 1) {
           if (ic_diff != 0) {
-              float refClock = 8000000.0; 
+              float refClock = 4800000.0; 
               float frequency = refClock / ic_diff;
               float rpm = (frequency / 330.0) * 60.0;
 
