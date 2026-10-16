@@ -1,0 +1,17 @@
+/home/administrator/Desktop/MCI/Homeworks/homework-1/cmake/stm32cubemx/../../Drivers/CMSIS/Include/core_cm4.h:1688:22:__NVIC_EnableIRQ	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/cmake/stm32cubemx/../../Drivers/CMSIS/Include/core_cm4.h:1816:22:__NVIC_SetPriority	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:71:13:Control_RGB_LEDs	24	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:79:13:TIM_Init	4	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:87:13:Start_TIM	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:95:17:TIM_Expired	4	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:96:13:Stop_TIM	4	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:99:13:Task_Flash_FSM_Timer	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:132:13:Task_RGB_FSM_Timer	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:178:5:main	24	static,ignoring_inline_asm
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:315:6:SystemClock_Config	128	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:358:13:MX_I2C1_Init	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:381:13:MX_RTC_Init	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:396:13:MX_SPI1_Init	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:418:13:MX_USB_PCD_Init	8	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:450:6:EXTI0_IRQHandler	4	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/main.c:460:6:Error_Handler	4	static,ignoring_inline_asm

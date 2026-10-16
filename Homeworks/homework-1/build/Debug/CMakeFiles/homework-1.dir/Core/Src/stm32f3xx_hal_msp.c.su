@@ -1,0 +1,9 @@
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:62:6:HAL_MspInit	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:87:6:HAL_I2C_MspInit	48	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:124:6:HAL_I2C_MspDeInit	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:155:6:HAL_RTC_MspInit	24	static,ignoring_inline_asm
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:178:6:HAL_RTC_MspDeInit	24	static,ignoring_inline_asm
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:200:6:HAL_SPI_MspInit	48	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:238:6:HAL_SPI_MspDeInit	16	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:268:6:HAL_PCD_MspInit	48	static
+/home/administrator/Desktop/MCI/Homeworks/homework-1/Core/Src/stm32f3xx_hal_msp.c:305:6:HAL_PCD_MspDeInit	16	static
