@@ -33,7 +33,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//task02 begin
+#define DEBUG_TEXT 1   // 1 = readable text in terminal, 0 = raw byte for Python
+//task02 end
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -93,6 +95,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
     if (hspi->Instance == SPI1) {
         HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);  // CS high
         temp_ready = 1;
+        HAL_GPIO_TogglePin(GPIOE, LD3_Pin);   // LED blinks = SPI interrupt works
     }
 }
 //task02 end
@@ -133,7 +136,22 @@ int main(void)
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
   //task02 begin
+
+  HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(SPI1_IRQn);
   gyro_init();
+  HAL_Delay(100);
+  HAL_Delay(10);
+  {
+      uint8_t c = 0x80 | 0x0F, id = 0;
+      HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
+      HAL_SPI_Transmit(&hspi1, &c, 1, HAL_MAX_DELAY);
+      HAL_SPI_Receive(&hspi1, &id, 1, HAL_MAX_DELAY);
+      HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+      char b[60];
+      int n = snprintf(b, sizeof b, "\r\n--- Task 2 start, WHO_AM_I = 0x%02X ---\r\n", id);
+      HAL_UART_Transmit(&huart2, (uint8_t *)b, n, HAL_MAX_DELAY);
+  }
   //task02 end
   /* USER CODE END 2 */
 
@@ -147,20 +165,37 @@ int main(void)
     //task02 begin
    
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);   // CS low
-HAL_SPI_Transmit_IT(&hspi1, &temp_cmd, 1);              // starts the chain
+    HAL_SPI_Transmit_IT(&hspi1, &temp_cmd, 1);              // starts the chain
 
-uint32_t t0 = HAL_GetTick();
-while (!temp_ready && (HAL_GetTick() - t0 < 50)) { }   // wait (max 50 ms)
+    uint32_t t0 = HAL_GetTick();
+    while (!temp_ready && (HAL_GetTick() - t0 < 50)) { }   // wait (max 50 ms)
 
-if (temp_ready) {
-    temp_ready = 0;
-    int8_t temperature = (int8_t)rx_temp;               // signed 8-bit
-    HAL_UART_Transmit(&huart2, (uint8_t *)&temperature, 1, HAL_MAX_DELAY);
-} else {
-    HAL_SPI_Abort(&hspi1);
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
-}
-HAL_Delay(150);                                         // 100–200 ms required                                      // 100–200 ms required
+    if (temp_ready) {
+        temp_ready = 0;
+        int8_t temperature = (int8_t)rx_temp;               // signed 8-bit
+        #if DEBUG_TEXT
+        char dbg[32];
+        int n = snprintf(dbg, sizeof dbg, "%d\n", temperature);
+        HAL_UART_Transmit(&huart2, (uint8_t *)dbg, n, HAL_MAX_DELAY);
+        #else
+                HAL_UART_Transmit(&huart2, (uint8_t *)&temperature, 1, HAL_MAX_DELAY);
+        #endif
+            } else {
+                HAL_SPI_Abort(&hspi1);
+                HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+        #if DEBUG_TEXT
+                HAL_UART_Transmit(&huart2, (uint8_t *)"SPI IT timeout\r\n", 16, HAL_MAX_DELAY);
+        #endif
+            }
+            HAL_Delay(150);                                         // 100–200 ms required
+                //temporairly commented below from here
+    //     HAL_UART_Transmit(&huart2, (uint8_t *)&temperature, 1, HAL_MAX_DELAY);
+    // } else {
+    //     HAL_SPI_Abort(&hspi1);
+    //     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+    // }
+    // HAL_Delay(150);                                 // 100–200 ms required
+    // ...te here
     //task01 begin
     // uint8_t cmd = 0x80 | 0x0F;   // read bit + WHO_AM_I address = 0x8F
     // uint8_t id  = 0;
