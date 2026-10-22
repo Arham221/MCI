@@ -36,6 +36,13 @@
 //task02 begin
 #define DEBUG_TEXT 1   // 1 = readable text in terminal, 0 = raw byte for Python
 //task02 end
+//task03 begin
+#define CTRL_REG1       0x20
+#define CTRL_REG1_VAL   0x8F      // 0b10001111: power on, X/Y/Z enabled
+#define OUT_TEMP_REG    0x26
+#define OUT_X_L_REG     0x28
+#define SENS_245DPS     0.00875f  // 8.75 mdps/LSB at +/-245 dps
+//task03 end
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,6 +80,8 @@ static void MX_USB_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#if 0
+
 //task02 begin
 void gyro_init(void)
 {
@@ -99,6 +108,27 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
     }
 }
 //task02 end
+#endif 
+//task03 begin
+void gyro_init(void)
+{
+    uint8_t tx[2] = { CTRL_REG1, CTRL_REG1_VAL };
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);   // CS low
+    HAL_SPI_Transmit(&hspi1, tx, 2, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);     // CS high
+}
+
+void gyro_read(uint8_t reg, uint8_t *buf, uint16_t len)
+{
+    uint8_t cmd = 0x80 | reg;            // bit 7 = read
+    if (len > 1) cmd |= 0x40;            // bit 6 = auto-increment for multi-byte
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
+    HAL_SPI_Receive(&hspi1, buf, len, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+}
+//task03 end
+
 /* USER CODE END 0 */
 
 /**
@@ -136,7 +166,7 @@ int main(void)
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
   //task02 begin
-
+#if 0
   HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(SPI1_IRQn);
   gyro_init();
@@ -153,6 +183,11 @@ int main(void)
       HAL_UART_Transmit(&huart2, (uint8_t *)b, n, HAL_MAX_DELAY);
   }
   //task02 end
+#endif
+  //task03 begin
+  gyro_init();          // once, before the loop
+  HAL_Delay(100);
+//task03 end
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -162,6 +197,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    #if 0
     //task02 begin
    
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);   // CS low
@@ -210,6 +246,27 @@ int main(void)
     // HAL_UART_Transmit(&huart2, (uint8_t *)msg, n, HAL_MAX_DELAY);
     // HAL_Delay(500);
     //task01 end
+    #endif 
+    //task03 begin
+    uint8_t raw[6];
+    int8_t  temp;
+
+    gyro_read(OUT_TEMP_REG, (uint8_t *)&temp, 1);   // temperature (signed 8-bit)
+    gyro_read(OUT_X_L_REG, raw, 6);                 // X_L,X_H,Y_L,Y_H,Z_L,Z_H
+
+    int16_t x_raw = (int16_t)((raw[1] << 8) | raw[0]);   // low byte first
+    int16_t y_raw = (int16_t)((raw[3] << 8) | raw[2]);
+    int16_t z_raw = (int16_t)((raw[5] << 8) | raw[4]);
+
+    float x_dps = x_raw * SENS_245DPS;
+    float y_dps = y_raw * SENS_245DPS;
+    float z_dps = z_raw * SENS_245DPS;
+
+    char buf[80];
+    int len = snprintf(buf, sizeof buf, "%d, %.2f, %.2f, %.2f\n", temp, x_dps, y_dps, z_dps);
+    HAL_UART_Transmit(&huart2, (uint8_t *)buf, len, HAL_MAX_DELAY);
+    HAL_Delay(100);
+    //task03 end
   }
   /* USER CODE END 3 */
 }
