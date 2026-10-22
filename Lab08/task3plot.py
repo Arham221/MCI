@@ -46,7 +46,7 @@ while True:
 
         # Append each value to its corresponding signal list
         for i, val in enumerate(values):
-            all_signals[i].append(int(val))
+            all_signals[i].append(float(val))
 
         time_ms.append(cnt)
         cnt += 1
