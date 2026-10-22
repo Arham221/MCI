@@ -3,70 +3,61 @@ import matplotlib.pyplot as plt
 from drawnow import *
 
 # === Setup Serial ===
-sinWaveData = serial.Serial('/dev/ttyUSB0', 115200)
+# Matches your terminal command port and baud rate
+ser = serial.Serial('/dev/ttyUSB0', 115200)
 plt.ion()
-
-# === Plot Styles to Rotate Through ===
-plot_styles = ['r.-', 'b.-', 'g.-', 'm.-', 'c.-', 'y.-', 'k.-']
 
 # === Data Storage ===
 NUM_SAMPLES = 100
-time_ms = []
+time_array = []
+temp_data = []
+x_data = []
+y_data = []
+z_data = []
 cnt = 0
-all_signals = []  # List of lists. all_signals[0] = i values, all_signals[1] = j values, etc.
-signals = ["Temperature", "X", "Y", "Z"]
 
 # === Plotting Function ===
-def makeFig(title, xLabel, yLabel, yLimit, *args):
+# drawnow expects a function with zero arguments
+def plot_data():
     plt.clf()
-    plt.title(title)
+    plt.title('Gyroscope & Temperature Data')
     plt.grid(True)
-    plt.xlabel(xLabel)
-    plt.ylabel(yLabel)
-    plt.ylim(yLimit[0], yLimit[1])  
+    plt.xlabel('Samples')
+    plt.ylabel('Values')
 
-    for arg in args:
-        plt.plot(time_ms, arg[0], arg[1], label=arg[2])
+    plt.plot(time_array, temp_data, 'r.-', label='Temperature')
+    plt.plot(time_array, x_data, 'b.-', label='X dps')
+    plt.plot(time_array, y_data, 'g.-', label='Y dps')
+    plt.plot(time_array, z_data, 'm.-', label='Z dps')
 
     plt.legend(loc='upper left')
 
 # === Main Loop ===
 while True:
-    while sinWaveData.inWaiting() == 0:
-        pass  # Wait for data
-
+    line = ser.readline().decode('utf-8').strip()
+    
+    # 1. Parse the data first
     try:
-
-        line = sinWaveData.readline().decode().strip()
-        values = line.split(',')
-
-        # First time: initialize sublists
-        if len(all_signals) != len(values):
-            all_signals = [[] for _ in range(len(values))]
-
-        # Append each value to its corresponding signal list
-        for i, val in enumerate(values):
-            all_signals[i].append(float(val))
-
-        time_ms.append(cnt)
-        cnt += 1
-
-        # Build args for plotting
-        args = []
-        for i, signal in enumerate(all_signals):
-            style = plot_styles[i % len(plot_styles)]
-            label = signals[i]
-            args.append((signal, style, label))
-
-        title = "Gyroscope Plot"
-        drawnow(lambda: makeFig(title, "Time (ms)", "Value", [-255, 255], *args))
-        plt.pause(0.0001)
-
-        # Keep only last 500 samples
-        if len(time_ms) > NUM_SAMPLES:
-            time_ms.pop(0)
-            for signal in all_signals:
-                signal.pop(0)
-
+        temp, x, y, z = map(float, line.split(','))
     except Exception as e:
-        print("Error:", e)
+        continue  # Skip incomplete lines silently
+        
+    # 2. Append to ALL lists only after a successful parse
+    time_array.append(cnt)
+    cnt += 1
+    
+    temp_data.append(temp)
+    x_data.append(x)
+    y_data.append(y)
+    z_data.append(z)
+    
+    # Optional: Keep memory clean by limiting plot to last NUM_SAMPLES
+    if len(time_array) > NUM_SAMPLES:
+        time_array.pop(0)
+        temp_data.pop(0)
+        x_data.pop(0)
+        y_data.pop(0)
+        z_data.pop(0)
+    
+    # 3. Plot
+    drawnow(plot_data)
