@@ -35,7 +35,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//task02 begin
+#define LSM_ADDR   (0x19 << 1)
+#define RAD_TO_DEG 57.2958f
+#define N_CAL      20
+//task02 end
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,8 +58,19 @@ PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 //task01 begin
-char msg[120];
+// char msg[120];
 //task01 end
+
+//task02 begin
+typedef struct {
+  int16_t ax_raw, ay_raw, az_raw;
+  float ax, ay, az;              // in g
+  float ax_off, ay_off, az_off;  // calibration offsets
+  float roll_acc, pitch_acc;     // degrees
+} LSM_t;
+LSM_t lsm;
+char msg[120];
+//task02 end
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +86,51 @@ static void MX_USB_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//task02 begin
+void Init_LSM(void) {
+  uint8_t d = 0x67;   // 200 Hz, normal power, X/Y/Z enabled
+  HAL_I2C_Mem_Write(&hi2c1, LSM_ADDR, 0x20, I2C_MEMADD_SIZE_8BIT, &d, 1, 100);
+  d = 0x00;           // normal mode, +-2g
+  HAL_I2C_Mem_Write(&hi2c1, LSM_ADDR, 0x23, I2C_MEMADD_SIZE_8BIT, &d, 1, 100);
+}
 
+void Read_LSM(LSM_t *m) {
+  uint8_t b[6];
+  // 0x28 | 0x80 = "auto-increment": one read returns X_L,X_H,Y_L,Y_H,Z_L,Z_H
+  HAL_I2C_Mem_Read(&hi2c1, LSM_ADDR, 0x28 | 0x80, I2C_MEMADD_SIZE_8BIT, b, 6, 100);
+
+  // this sensor sends the LOW byte first
+  m->ax_raw = (int16_t)((b[1] << 8) | b[0]);
+  m->ay_raw = (int16_t)((b[3] << 8) | b[2]);
+  m->az_raw = (int16_t)((b[5] << 8) | b[4]);
+
+  // data is left-justified (10 useful bits), so shift by 6, then 3.9 mg/LSB
+  m->ax = ((m->ax_raw >> 6) * 3.9f) / 1000.0f - m->ax_off;
+  m->ay = ((m->ay_raw >> 6) * 3.9f) / 1000.0f - m->ay_off;
+  m->az = ((m->az_raw >> 6) * 3.9f) / 1000.0f - m->az_off;
+
+  m->roll_acc  = atan2f(m->ay, m->az) * RAD_TO_DEG;
+  m->pitch_acc = atan2f(-m->ax, sqrtf(m->ay*m->ay + m->az*m->az)) * RAD_TO_DEG;
+}
+
+void Offset_LSM(LSM_t *m) {
+  m->ax_off = m->ay_off = m->az_off = 0;   // start from zero offsets
+  float sx = 0, sy = 0, sz = 0;
+  for (int i = 0; i < N_CAL; i++) {
+    Read_LSM(m);
+    sx += m->ax; sy += m->ay; sz += m->az;
+    HAL_Delay(10);
+  }
+  m->ax_off = sx / N_CAL;
+  m->ay_off = sy / N_CAL;
+  m->az_off = sz / N_CAL - 1.0f;           // keep gravity: flat Z should be +1 g
+}
+
+void Print_LSM(LSM_t *m) {
+  int n = snprintf(msg, sizeof(msg), "%.3f,%.3f,%.3f\r\n", m->ax, m->ay, m->az);
+  HAL_UART_Transmit(&huart2, (uint8_t*)msg, n, 100);
+}
+//task02 end
 /* USER CODE END 0 */
 
 /**
@@ -109,12 +168,17 @@ int main(void)
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
 //task01 begin
-uint8_t id = 0;
-HAL_StatusTypeDef st = HAL_I2C_Mem_Read(&hi2c1, 0x19 << 1, 0x0F,
-                                        I2C_MEMADD_SIZE_8BIT, &id, 1, 100);
-int n = snprintf(msg, sizeof(msg), "status=%d WHO_AM_I=0x%02X\r\n", st, id);
-HAL_UART_Transmit(&huart2, (uint8_t*)msg, n, 100);
+// uint8_t id = 0;
+// HAL_StatusTypeDef st = HAL_I2C_Mem_Read(&hi2c1, 0x19 << 1, 0x0F,
+//                                         I2C_MEMADD_SIZE_8BIT, &id, 1, 100);
+// int n = snprintf(msg, sizeof(msg), "status=%d WHO_AM_I=0x%02X\r\n", st, id);
+// HAL_UART_Transmit(&huart2, (uint8_t*)msg, n, 100);
 //task01 end
+
+//task02 begin
+Init_LSM();
+Offset_LSM(&lsm);   // keep the board FLAT and STILL for this ~0.2 s
+//task02 end
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,6 +188,11 @@ HAL_UART_Transmit(&huart2, (uint8_t*)msg, n, 100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //task02 begin
+    Read_LSM(&lsm);
+    Print_LSM(&lsm);
+    HAL_Delay(100);
+    //task02 end
   }
   /* USER CODE END 3 */
 }
