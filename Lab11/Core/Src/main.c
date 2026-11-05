@@ -143,7 +143,7 @@ int main(void)
     uint8_t y_l = 0, y_h = 0;
     uint8_t z_l = 0, z_h = 0;
 
-    // Read the low and high bytes for the X, Y, and Z axes[cite: 155]
+    // Read the low and high bytes for the X, Y, and Z axes
     HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x28, 1, &x_l, 1, HAL_MAX_DELAY);
     HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x29, 1, &x_h, 1, HAL_MAX_DELAY);
     HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x2A, 1, &y_l, 1, HAL_MAX_DELAY);
@@ -174,7 +174,7 @@ int main(void)
     HAL_UART_Transmit(&huart2, (uint8_t*)sensor_buf, strlen(sensor_buf), HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, (uint8_t*)sensor_buf, strlen(sensor_buf), HAL_MAX_DELAY);
 
-    // Delay to prevent terminal flooding (e.g., 100ms)[cite: 161]
+    // Delay to prevent terminal flooding (e.g., 100ms)
     HAL_Delay(100);
     //task01 end
   }
