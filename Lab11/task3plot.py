@@ -3,32 +3,36 @@ import matplotlib.pyplot as plt
 from drawnow import *
 
 # === Setup Serial ===
-sinWaveData = serial.Serial('/dev/ttyUSB1', 115200) # (Change to ttyACM0 if needed)
+sinWaveData = serial.Serial('/dev/ttyUSB0', 115200) # (Change to ttyACM0 if needed)
 plt.ion()
 
 # === Plot Styles to Rotate Through ===
-plot_styles = ['b.-', 'g.-', 'm.-', 'c.-', 'y.-', 'k.-']
+plot_styles = ['b.-', 'g.-', 'm.-', 'r.-', 'y.-', 'k.-']
 
 # === Data Storage ===
 NUM_SAMPLES = 100
 time_ms = []
 cnt = 0
 all_signals = []
-signals = ["Temperature", "X", "Y", "Z"]
+# Updated to match Lab 11 Stage B data:
+signals = ["Acc Angle", "Gyro Rate", "Filtered Angle", "PID Out"] 
 
 # === Plotting Function ===
 def makeFig(title, xLabel, yLabel, *args):
     plt.clf()
-    plt.title(title)
-    plt.grid(True)
-    plt.xlabel(xLabel)
-    plt.ylabel(yLabel)
-
-    for arg in args:
-        plt.plot(time_ms, arg[0], arg[1], label=arg[2])
-
-    plt.legend(loc='upper left')
-
+    ax1 = plt.subplot(2, 1, 1)
+    ax1.set_title(title)
+    ax1.grid(True)
+    ax1.set_ylabel("Angle (deg)")
+    ax2 = plt.subplot(2, 1, 2)
+    ax2.grid(True)
+    ax2.set_xlabel(xLabel)
+    ax2.set_ylabel("Rate / PID")
+    for i, arg in enumerate(args):
+        target = ax1 if i in (0, 2) else ax2     # acc angle + filtered angle on top
+        target.plot(time_ms, arg[0], arg[1], label=arg[2])
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper left')
 # === Main Loop ===
 while True:
     
@@ -44,11 +48,14 @@ while True:
     try:
         line = sinWaveData.readline().decode().strip()
         values = line.split(',')
-
+        print(values)
+        
         if len(values) != 4:
+            print("skipped:", line)
             continue
 
-        parsed_vals = [int(v) for v in values]
+        # FIX 1: Change int to float so it doesn't crash on decimals
+        parsed_vals = [float(v) for v in values] 
 
         if len(all_signals) == 0:
             all_signals = [[] for _ in range(4)]
@@ -60,13 +67,14 @@ while True:
         cnt += 1
 
         args = []
-        for i in range(1, 4):
-            style = plot_styles[(i-1) % len(plot_styles)]
+        # FIX 2: Loop from 0 to 4 to plot ALL signals (not 1 to 4)
+        for i in range(4): 
+            style = plot_styles[i % len(plot_styles)]
             label = signals[i]
             args.append((all_signals[i], style, label))
 
-        title = "Live Angles (Pitch & Roll)"
-        drawnow(lambda: makeFig(title, "Time (ticks)", "Degrees", *args))
+        title = "Lab 11: Complementary Filter & PID"
+        drawnow(lambda: makeFig(title, "Time (ticks)", "Value", *args))
         plt.pause(0.0001)
 
         if len(time_ms) > NUM_SAMPLES:
@@ -74,5 +82,7 @@ while True:
             for signal in all_signals:
                 signal.pop(0)
 
-    except Exception:
+    except Exception as e:
+        # Actually print the error so it doesn't fail silently
+        print(f"Error parsing data: {e}") 
         pass
