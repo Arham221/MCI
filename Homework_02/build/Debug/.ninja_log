@@ -1,0 +1,14 @@
+# ninja log v7
+2	33	1794920180120696717	CMakeFiles/Homework_02.dir/startup_stm32f303xc.s.obj	8af005da845352ab
+2	43	1794920180120268100	CMakeFiles/Homework_02.dir/Core/Src/sysmem.c.obj	e751a371b5e6de35
+2	68	1794920180120477485	CMakeFiles/Homework_02.dir/Core/Src/syscalls.c.obj	4f9cb6ec92bc7390
+1	115	1794920180119670406	CMakeFiles/Homework_02.dir/Core/Src/timer.c.obj	c80b266bf234cf3
+3	116	1794920180120897742	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32f3xx.c.obj	8a1959690cadf285
+1	119	1794920180118326506	CMakeFiles/Homework_02.dir/Core/Src/main.c.obj	ffac30c1679950c4
+2	120	1794920180119871354	CMakeFiles/Homework_02.dir/Core/Src/adc.c.obj	b3f34d8ff1367b86
+2	130	1794920180120091583	CMakeFiles/Homework_02.dir/Core/Src/uart.c.obj	a9d739d1b64f2342
+130	169	1794920180247331493	Homework_02.elf	ad807b1495df1ec2
+1	103	1794920458129429288	CMakeFiles/Homework_02.dir/Core/Src/timer.c.obj	c80b266bf234cf3
+1	106	1794920458129633344	CMakeFiles/Homework_02.dir/Core/Src/uart.c.obj	a9d739d1b64f2342
+1	109	1794920458127953792	CMakeFiles/Homework_02.dir/Core/Src/main.c.obj	ffac30c1679950c4
+110	155	1794920458236958593	Homework_02.elf	ad807b1495df1ec2

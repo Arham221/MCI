@@ -1,0 +1,50 @@
+[
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/main.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/main.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/main.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/main.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/timer.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/timer.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/timer.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/timer.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/adc.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/adc.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/adc.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/adc.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/uart.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/uart.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/uart.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/uart.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/sysmem.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/sysmem.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/sysmem.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/sysmem.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles/Homework_02.dir/Core/Src/syscalls.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/syscalls.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/syscalls.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/Core/Src/syscalls.c.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -x assembler-with-cpp -MMD -MP -g -o CMakeFiles/Homework_02.dir/startup_stm32f303xc.s.obj -c /home/azyan/MCI/Homework_02/startup_stm32f303xc.s",
+  "file": "/home/azyan/MCI/Homework_02/startup_stm32f303xc.s",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/CMakeFiles/Homework_02.dir/startup_stm32f303xc.s.obj"
+},
+{
+  "directory": "/home/azyan/MCI/Homework_02/build/Debug",
+  "command": "/usr/bin/arm-none-eabi-gcc -DDEBUG -DSTM32F303xC -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Core/Inc -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32f3xx.c.obj -c /home/azyan/MCI/Homework_02/Core/Src/system_stm32f3xx.c",
+  "file": "/home/azyan/MCI/Homework_02/Core/Src/system_stm32f3xx.c",
+  "output": "/home/azyan/MCI/Homework_02/build/Debug/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32f3xx.c.obj"
+}
+]

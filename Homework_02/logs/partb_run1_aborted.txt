@@ -1,0 +1,29 @@
+   0.0s start
+   1.0s rx 10080 samples  f= 1000.0Hz  Vpp=1.165V min=1.427 max=2.592
+   2.0s rx 10110 samples  f= 1000.0Hz  Vpp=1.187V min=1.407 max=2.594
+   3.0s rx 10110 samples  f= 1000.0Hz  Vpp=1.186V min=1.413 max=2.599
+   4.0s rx 10121 samples  f= 1000.0Hz  Vpp=1.158V min=1.425 max=2.583
+   5.1s rx 10110 samples  f= 1000.0Hz  Vpp=1.204V min=1.401 max=2.605
+   6.1s rx 10130 samples  f= 1000.0Hz  Vpp=1.185V min=1.411 max=2.596
+   7.1s rx 10111 samples  f= 1000.0Hz  Vpp=1.174V min=1.413 max=2.588
+   8.1s rx 10140 samples  f= 1000.0Hz  Vpp=1.194V min=1.419 max=2.613
+   9.1s rx 10120 samples  f= 1000.0Hz  Vpp=1.188V min=1.405 max=2.593
+  10.1s rx 10101 samples  f= 1000.0Hz  Vpp=1.149V min=1.422 max=2.572
+  11.1s rx 10150 samples  f= 1000.0Hz  Vpp=1.185V min=1.407 max=2.592
+  12.1s rx 10110 samples  f= 1000.0Hz  Vpp=1.209V min=1.398 max=2.607
+  13.2s rx 10101 samples  f= 1000.0Hz  Vpp=1.154V min=1.423 max=2.577
+  14.2s rx 10100 samples  f= 1000.0Hz  Vpp=1.204V min=1.401 max=2.605
+  15.2s rx 10111 samples  f= 1000.0Hz  Vpp=1.186V min=1.400 max=2.586
+  16.2s rx 10100 samples  f= 1000.0Hz  Vpp=1.163V min=1.428 max=2.591
+  17.0s NO DATA
+  17.2s rx  3470 samples  f= 1000.0Hz  Vpp=1.163V min=1.423 max=2.586
+  18.2s rx     0 samples  f= 1000.0Hz  Vpp=1.163V min=1.423 max=2.586
+  19.2s rx     0 samples  f= 1000.0Hz  Vpp=1.163V min=1.423 max=2.586
+  20.2s rx     0 samples  f= 1000.0Hz  Vpp=1.163V min=1.423 max=2.586
+  21.2s rx     0 samples  f= 1000.0Hz  Vpp=1.163V min=1.423 max=2.586
+  21.4s RECEIVING again after 4.8s gap (recoveries=1)
+  22.2s rx  8347 samples  f= 1000.0Hz  Vpp=1.155V min=1.439 max=2.594
+  23.2s rx 10130 samples  f= 1000.0Hz  Vpp=1.218V min=1.393 max=2.611
+  24.3s rx 10111 samples  f= 1000.0Hz  Vpp=1.200V min=1.418 max=2.617
+  25.3s rx 10120 samples  f= 1000.0Hz  Vpp=1.160V min=1.431 max=2.591
+  26.3s rx 10121 samples  f= 1000.0Hz  Vpp=1.180V min=1.409 max=2.588

@@ -1,0 +1,7 @@
+/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include/core_cm4.h:1688:22:__NVIC_EnableIRQ	16	static
+/home/azyan/MCI/Homework_02/cmake/stm32cubemx/../../Drivers/CMSIS/Include/core_cm4.h:1816:22:__NVIC_SetPriority	16	static
+/home/azyan/MCI/Homework_02/Core/Src/adc.c:13:13:delay_loop	16	static
+/home/azyan/MCI/Homework_02/Core/Src/adc.c:15:6:ADC1_Init	8	static
+/home/azyan/MCI/Homework_02/Core/Src/adc.c:65:6:ADC1_Start	4	static
+/home/azyan/MCI/Homework_02/Core/Src/adc.c:70:6:ADC1_2_IRQHandler	16	static
+/home/azyan/MCI/Homework_02/Core/Src/adc.c:90:9:ADC_Read	16	static
