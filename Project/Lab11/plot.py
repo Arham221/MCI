@@ -1,58 +1,105 @@
+"""
+Lab 11 live plotter + command console.
+
+    python3 plot.py                 # auto-detects the serial port
+    python3 plot.py /dev/ttyUSB0    # or give it explicitly
+
+Plots whatever comma-separated numbers the board sends (4 columns in mode 0,
+7 in mode 1, 6 in mode 2). Lines starting with '#' are printed, not plotted.
+Type commands in this terminal and press Enter, e.g.:
+    e        arm / disarm          p 60   d 1.5   i 0     set gains
+    z        set-point = current angle                    m 300  motor test (m 0 stops)
+    v 1      raw IMU mode          v 2    PID terms       ?      show parameters
+
+Needs: pip install pyserial matplotlib
+"""
 import collections
-import serial
+import sys
+import threading
+
 import matplotlib.pyplot as plt
+import serial
+import serial.tools.list_ports
 
-PORT = '/dev/ttyUSB0'
 BAUD = 115200
-N = 300                                   # samples kept on screen
-names = ["Acc Angle", "Gyro Rate", "Filtered Angle", "PID Out"]
+N = 400  # samples on screen (20 Hz -> 20 s)
+NAMES = {
+    4: ["acc angle (deg)", "gyro rate (deg/s)", "filtered angle (deg)", "PID out (counts)"],
+    7: ["ax (g)", "ay (g)", "az (g)", "gx (deg/s)", "gy (deg/s)", "gz (deg/s)", "loop (us)"],
+    6: ["angle (deg)", "setpoint (deg)", "P", "I", "D", "PID out"],
+}
+TOP = {4: [0, 2], 7: [0, 1, 2], 6: [0, 1]}  # which columns go on the upper axes
 
-ser = serial.Serial(PORT, BAUD, timeout=0.1)
-print("Port opened, waiting for data...")
 
-data = [collections.deque(maxlen=N) for _ in names]
+def find_port():
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+    ports = [p.device for p in serial.tools.list_ports.comports()
+             if "USB" in p.device or "ACM" in p.device or "COM" in p.device]
+    if not ports:
+        sys.exit("No serial port found - pass it as an argument.")
+    return ports[0]
 
-plt.ion()
-fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-ax1.set_title("Lab 11: Complementary Filter & PID")
-ax1.set_ylabel("Angle (deg)")
-ax2.set_ylabel("Rate / PID")
-ax2.set_xlabel("Samples")
-ax1.grid(True); ax2.grid(True)
 
-lines = []
-for i, nm in enumerate(names):
-    ax = ax1 if i in (0, 2) else ax2      # angles on top, rate and PID below
-    (ln,) = ax.plot([], [], label=nm)
-    lines.append(ln)
-ax1.legend(loc="upper left")
-ax2.legend(loc="upper left")
+def console(ser):
+    """Send whatever the user types to the board."""
+    for line in sys.stdin:
+        ser.write((line.strip() + "\n").encode())
 
-first = True
-while plt.fignum_exists(fig.number):
-    got = False
-    while ser.in_waiting:                 # read everything that has arrived
-        raw = ser.readline().decode(errors="ignore").strip()
-        parts = raw.split(",")
-        if len(parts) != 4:
-            continue
-        try:
-            vals = [float(p) for p in parts]
-        except ValueError:
-            continue
-        for d, v in zip(data, vals):
-            d.append(v)
-        got = True
-        if first:
-            print("First sample received:", vals)
-            first = False
 
-    if got:
-        for ln, d in zip(lines, data):
-            ln.set_data(range(len(d)), list(d))
+def main():
+    port = find_port()
+    ser = serial.Serial(port, BAUD, timeout=0.05)
+    print(f"Opened {port} @ {BAUD}. Type commands + Enter (e, p 60, d 1.5, z, ?...)")
+    threading.Thread(target=console, args=(ser,), daemon=True).start()
+
+    plt.ion()
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 7))
+    ncols, data, lines = None, [], []
+
+    def setup(n):
+        nonlocal data, lines
+        names = NAMES.get(n, [f"ch{i}" for i in range(n)])
+        top = TOP.get(n, list(range(n)))
+        data = [collections.deque(maxlen=N) for _ in range(n)]
         for ax in (ax1, ax2):
-            ax.relim()
-            ax.autoscale_view()
-    plt.pause(0.05)
+            ax.cla()
+            ax.grid(True)
+        lines = [(ax1 if i in top else ax2).plot([], [], label=names[i])[0] for i in range(n)]
+        ax1.legend(loc="upper left")
+        ax2.legend(loc="upper left")
+        ax1.set_title("Lab 11 - tilt estimation and PID")
+        ax2.set_xlabel("sample (20 Hz)")
 
-ser.close()
+    buf = b""
+    while plt.fignum_exists(fig.number):
+        buf += ser.read(ser.in_waiting or 1)
+        *rows, buf = buf.split(b"\n")
+        for raw in rows:
+            text = raw.decode(errors="ignore").strip()
+            if not text:
+                continue
+            if text.startswith("#"):
+                print(text)
+                continue
+            try:
+                vals = [float(v) for v in text.split(",")]
+            except ValueError:
+                continue
+            if len(vals) != ncols:
+                ncols = len(vals)
+                setup(ncols)
+            for dq, v in zip(data, vals):
+                dq.append(v)
+        if lines:
+            for ln, dq in zip(lines, data):
+                ln.set_data(range(len(dq)), dq)
+            for ax in (ax1, ax2):
+                ax.relim()
+                ax.autoscale_view()
+        plt.pause(0.03)
+    ser.close()
+
+
+if __name__ == "__main__":
+    main()

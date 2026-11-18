@@ -1,87 +1,43 @@
 /* USER CODE BEGIN Header */
-  /**
-    ******************************************************************************
-    * @file           : main.c
-    * @brief          : Main program body
-    ******************************************************************************
-    * @attention
-    *
-    * Copyright (c) 2026 STMicroelectronics.
-    * All rights reserved.
-    *
-    * This software is licensed under terms that can be found in the LICENSE file
-    * in the root directory of this software component.
-    * If no LICENSE file comes with this software, it is provided AS-IS.
-    *
-    ******************************************************************************
-    */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-  #include <stdio.h>
-  #include <string.h>
-  #include <math.h>
+#include <stdio.h>
+#include "app_config.h"
+#include "imu.h"
+#include "motor.h"
+#include "control.h"
+#include "telemetry.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct {
-  float ax, ay, az;      // g
-  float gx, gy, gz;      // deg/s (gyro bias already removed)
-} IMU_Data;
 
-typedef struct {
-  float kp, ki, kd;
-  float integral;        // already multiplied by ki
-  float out;
-} PID_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define AXIS_TEST        0        // 1 = print raw sensor values, no motors. Set to 0 afterwards.
 
-#define CONTROL_HZ       200
-#define DT               (1.0f / CONTROL_HZ)   // 0.005 s, used by the filter AND the PID
-#define COMP_ALPHA       0.98f
-#define RAD2DEG          57.2957795f
-#define PWM_MAX          999.0f                // = TIM3 ARR
-#define MOTOR_DEADZONE   0.0f                  // tune later
-#define INTEGRAL_LIMIT   400.0f                // anti-windup
-#define FALL_ANGLE_DEG   35.0f                 // motors cut beyond this
-#define PRINT_DIV        10                    // 200 Hz / 10 = 20 Hz to UART
-#define BALANCE_SIGN     1.0f                  // flip to -1.0f if motors push the wrong way
-
-/* accelerometer (I2C) */
-#define ACC_ADDR         0x32
-#define ACC_LSB_PER_G    16384.0f              // +-2 g, 16-bit left-justified
-
-/* gyroscope (SPI1, chip select PE3) */
-#define GYRO_CS_LOW()    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET)
-#define GYRO_CS_HIGH()   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET)
-#define GYRO_DPS_PER_LSB 0.00875f              // +-245 dps
-
-/* ---- axis choice: set these after the axis test (Step 3) ---- */
-#define TILT_ACC_NUM     ay
-#define TILT_ACC_DEN     az
-#define TILT_ACC_SIGN    -1.0f
-#define TILT_GYRO        gy
-#define TILT_GYRO_SIGN   1.0f
-
-/* motor pins */
-#define R_IN1_PORT GPIOA
-#define R_IN1_PIN  GPIO_PIN_1
-#define R_IN2_PORT GPIOF
-#define R_IN2_PIN  GPIO_PIN_4
-#define L_IN1_PORT GPIOC
-#define L_IN1_PIN  GPIO_PIN_10
-#define L_IN2_PORT GPIOC
-#define L_IN2_PIN  GPIO_PIN_9
-#define R_INVERT   0                           // set to 1 if a wheel spins the wrong way
-#define L_INVERT   0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -102,14 +58,7 @@ UART_HandleTypeDef huart2;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-IMU_Data g_imu;
-PID_t    g_pid = { .kp = 40.0f, .ki = 0.0f, .kd = 1.0f };   // starting guesses (PD is allowed)
-float    g_setpoint = 0.0f;                                 // upright angle in degrees
-float    g_gx_off = 0, g_gy_off = 0, g_gz_off = 0;          // gyro bias
-volatile float    g_acc_angle = 0, g_gyro_rate = 0, g_angle = 0;
-volatile uint8_t  g_print_flag = 0;
-volatile uint8_t  g_enabled = 0;                            // blue button toggles motors
-volatile uint32_t g_isr_us = 0;                             // how long one control run takes
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,124 +71,13 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
+static void Button_Poll(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/* ---------- sensors ---------- */
-HAL_StatusTypeDef IMU_Init(void)
-{
-  HAL_StatusTypeDef st = HAL_OK;
-  uint8_t v = 0x67;                       // accel: 200 Hz, normal mode, XYZ on
-  if (HAL_I2C_Mem_Write(&hi2c1, ACC_ADDR, 0x20, 1, &v, 1, 10) != HAL_OK) st = HAL_ERROR;
-  v = 0x80;                               // block data update, +-2 g
-  if (HAL_I2C_Mem_Write(&hi2c1, ACC_ADDR, 0x23, 1, &v, 1, 10) != HAL_OK) st = HAL_ERROR;
 
-  GYRO_CS_HIGH();
-  uint8_t tx[2] = { 0x20, 0x4F };         // gyro: 200 Hz, power on, XYZ on
-  GYRO_CS_LOW();
-  if (HAL_SPI_Transmit(&hspi1, tx, 2, 10) != HAL_OK) st = HAL_ERROR;
-  GYRO_CS_HIGH();
-  return st;
-}
-
-HAL_StatusTypeDef IMU_Read(IMU_Data *d)
-{
-  uint8_t a[6], g[6];
-  if (HAL_I2C_Mem_Read(&hi2c1, ACC_ADDR, 0x28 | 0x80, 1, a, 6, 3) != HAL_OK)
-    return HAL_ERROR;
-
-  uint8_t cmd = 0x80 | 0x40 | 0x28;       // read + auto-increment + OUT_X_L
-  GYRO_CS_LOW();
-  HAL_StatusTypeDef st = HAL_SPI_Transmit(&hspi1, &cmd, 1, 3);
-  if (st == HAL_OK) st = HAL_SPI_Receive(&hspi1, g, 6, 3);
-  GYRO_CS_HIGH();
-  if (st != HAL_OK) return HAL_ERROR;
-
-  d->ax = (int16_t)((a[1] << 8) | a[0]) / ACC_LSB_PER_G;
-  d->ay = (int16_t)((a[3] << 8) | a[2]) / ACC_LSB_PER_G;
-  d->az = (int16_t)((a[5] << 8) | a[4]) / ACC_LSB_PER_G;
-  d->gx = (int16_t)((g[1] << 8) | g[0]) * GYRO_DPS_PER_LSB - g_gx_off;
-  d->gy = (int16_t)((g[3] << 8) | g[2]) * GYRO_DPS_PER_LSB - g_gy_off;
-  d->gz = (int16_t)((g[5] << 8) | g[4]) * GYRO_DPS_PER_LSB - g_gz_off;
-  return HAL_OK;
-}
-
-void IMU_CalibrateGyro(uint16_t samples)  // board must be still
-{
-  float sx = 0, sy = 0, sz = 0;
-  uint16_t n = 0;
-  g_gx_off = g_gy_off = g_gz_off = 0;
-  for (uint16_t i = 0; i < samples; i++) {
-    IMU_Data d;
-    if (IMU_Read(&d) == HAL_OK) { sx += d.gx; sy += d.gy; sz += d.gz; n++; }
-    HAL_Delay(5);
-  }
-  if (n) { g_gx_off = sx / n; g_gy_off = sy / n; g_gz_off = sz / n; }
-}
-
-void IMU_TiltInputs(const IMU_Data *d, float *acc_angle_deg, float *gyro_rate_dps)
-{
-  *acc_angle_deg = TILT_ACC_SIGN * atan2f(d->TILT_ACC_NUM, d->TILT_ACC_DEN) * RAD2DEG;
-  *gyro_rate_dps = TILT_GYRO_SIGN * d->TILT_GYRO;
-}
-
-/* angle = 0.98*(angle + gyro*dt) + 0.02*acc   <- the manual's equation */
-float IMU_ComplementaryUpdate(float angle, float acc_angle, float gyro_rate)
-{
-  return COMP_ALPHA * (angle + gyro_rate * DT) + (1.0f - COMP_ALPHA) * acc_angle;
-}
-
-/* ---------- PID ---------- */
-void PID_Reset(PID_t *c) { c->integral = 0.0f; c->out = 0.0f; }
-
-void PID_Update(PID_t *c, float setpoint, float angle, float gyro_rate)
-{
-  float error = setpoint - angle;
-
-  c->integral += c->ki * error * DT;                       // I term, with anti-windup
-  if (c->integral >  INTEGRAL_LIMIT) c->integral =  INTEGRAL_LIMIT;
-  if (c->integral < -INTEGRAL_LIMIT) c->integral = -INTEGRAL_LIMIT;
-
-  // D term: d(error)/dt = -d(angle)/dt = -gyro_rate (setpoint is constant)
-  float out = c->kp * error + c->integral + c->kd * (-gyro_rate);
-
-  if (out >  PWM_MAX) out =  PWM_MAX;                      // PWM can't do more
-  if (out < -PWM_MAX) out = -PWM_MAX;
-  c->out = out;
-}
-
-/* ---------- motors ---------- */
-static void drive(GPIO_TypeDef *p1, uint16_t pin1, GPIO_TypeDef *p2, uint16_t pin2,
-                  uint32_t ch, float speed, int invert)
-{
-  if (invert) speed = -speed;
-  if (speed >  PWM_MAX) speed =  PWM_MAX;
-  if (speed < -PWM_MAX) speed = -PWM_MAX;
-
-  if (speed > 0.5f) {                       // forward
-    HAL_GPIO_WritePin(p1, pin1, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(p2, pin2, GPIO_PIN_RESET);
-  } else if (speed < -0.5f) {               // backward
-    HAL_GPIO_WritePin(p1, pin1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(p2, pin2, GPIO_PIN_SET);
-    speed = -speed;
-  } else {                                  // stop
-    HAL_GPIO_WritePin(p1, pin1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(p2, pin2, GPIO_PIN_RESET);
-    speed = 0.0f;
-  }
-  float duty = 0.0f;
-  if (speed > 0.0f)
-    duty = MOTOR_DEADZONE + speed * (PWM_MAX - MOTOR_DEADZONE) / PWM_MAX;
-  __HAL_TIM_SET_COMPARE(&htim3, ch, (uint32_t)duty);
-}
-
-void Motor_SetRight(float s) { drive(R_IN1_PORT, R_IN1_PIN, R_IN2_PORT, R_IN2_PIN, TIM_CHANNEL_1, s, R_INVERT); }
-void Motor_SetLeft (float s) { drive(L_IN1_PORT, L_IN1_PIN, L_IN2_PORT, L_IN2_PIN, TIM_CHANNEL_2, s, L_INVERT); }
-void Motor_SetBoth(float l, float r) { Motor_SetLeft(l); Motor_SetRight(r); }
-void Motor_StopAll(void) { Motor_SetBoth(0, 0); }
 /* USER CODE END 0 */
 
 /**
@@ -278,62 +116,39 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(500);
-if (IMU_Init() != HAL_OK)
-  HAL_UART_Transmit(&huart2, (uint8_t*)"IMU init FAILED\r\n", 17, 100);
-HAL_Delay(100);
-IMU_CalibrateGyro(400);                 // ~2 s: KEEP THE BOARD STILL
+  char msg[96];
+  Motor_Init(&htim3);                       /* PWM running, both motors stopped */
+  Telemetry_Init(&huart2);
+  Telemetry_Print("\r\n# Lab 11: balance controller booting\r\n");
 
-{ float a, r;
-  IMU_Read(&g_imu);
-  IMU_TiltInputs(&g_imu, &a, &r);
-  g_angle = a;                          // start the filter from the accelerometer angle
-}
+  HAL_Delay(300);
+  if (IMU_Init(&hi2c1, &hspi1) != HAL_OK)
+    Telemetry_Print("# IMU init FAILED - check the board\r\n");
+  snprintf(msg, sizeof msg, "# gyro WHO_AM_I = 0x%02X (D4 = L3GD20, D3 = I3G4250D)\r\n",
+           IMU_GyroWhoAmI());
+  Telemetry_Print(msg);
 
-CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;   // cycle counter, only used to time the ISR
-DWT->CYCCNT = 0;
-DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  Telemetry_Print("# calibrating gyro - keep the robot STILL...\r\n");
+  HAL_GPIO_WritePin(GPIOE, LD4_Pin, GPIO_PIN_SET);
+  IMU_CalibrateGyro(GYRO_CAL_SAMPLES);
+  HAL_GPIO_WritePin(GPIOE, LD4_Pin, GPIO_PIN_RESET);
 
-HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-Motor_StopAll();
+  Control_Init();
+  HAL_TIM_Base_Start_IT(&htim6);            /* 200 Hz control loop starts here */
+  Telemetry_Print("# ready: press the blue button (or send 'e') to arm, '?' for parameters\r\n");
 
-HAL_TIM_Base_Start_IT(&htim6);          // 200 Hz control loop starts here
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-    // Test UART transmission before any I2C communication starts
-    HAL_UART_Transmit(&huart2, (uint8_t*)"Booting\r\n", 9, HAL_MAX_DELAY);
-    while (1)
-    {
+  while (1)
+  {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    static uint8_t prev_btn = 0;
-uint8_t btn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
-if (btn && !prev_btn) {                 // blue button toggles the motors
-  g_enabled ^= 1;
-  HAL_GPIO_WritePin(GPIOE, LD3_Pin, g_enabled ? GPIO_PIN_SET : GPIO_PIN_RESET);
-  HAL_Delay(200);                       // crude debounce
-}
-prev_btn = btn;
-
-if (g_print_flag) {
-  g_print_flag = 0;
-  char buf[100];
-#if AXIS_TEST
-  int n = snprintf(buf, sizeof buf, "%.2f,%.2f,%.2f,%.1f,%.1f,%.1f,%lu\r\n",
-                   g_imu.ax, g_imu.ay, g_imu.az, g_imu.gx, g_imu.gy, g_imu.gz,
-                   (unsigned long)g_isr_us);
-#else
-  // acc angle, gyro rate, FILTERED angle, PID output
-  int n = snprintf(buf, sizeof buf, "%.2f,%.2f,%.2f,%.1f\r\n",
-                   g_acc_angle, g_gyro_rate, g_angle, g_pid.out);
-#endif
-  HAL_UART_Transmit(&huart2, (uint8_t*)buf, n, 20);
-}
-    }
+    Button_Poll();                          /* arm / disarm                      */
+    Telemetry_Process();                    /* UART commands + 20 Hz telemetry   */
+  }
   /* USER CODE END 3 */
 }
 
@@ -719,41 +534,38 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/* Runs exactly every 5 ms, driven by TIM6 hardware: this is the fixed-rate control loop. */
+/**
+  * @brief TIM6 update interrupt: the fixed-rate (CONTROL_HZ) control loop.
+  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  static uint8_t print_div = 0;
-  if (htim->Instance != TIM6) return;
-  uint32_t t0 = DWT->CYCCNT;
-
-  /* 1. read sensors, 2. complementary filter */
-  if (IMU_Read(&g_imu) == HAL_OK) {
-    float a, r;
-    IMU_TiltInputs(&g_imu, &a, &r);
-    g_acc_angle = a;
-    g_gyro_rate = r;
-    g_angle = IMU_ComplementaryUpdate(g_angle, a, r);
-  }
-
-  /* 3. PID on the filtered angle */
-  PID_Update(&g_pid, g_setpoint, g_angle, g_gyro_rate);
-
-#if !AXIS_TEST
-  /* 4. motors (cut if disabled by the button or the robot has fallen) */
-  if (g_enabled && fabsf(g_angle) < FALL_ANGLE_DEG) {
-    float cmd = BALANCE_SIGN * g_pid.out;
-    Motor_SetBoth(cmd, cmd);
-  } else {
-    Motor_StopAll();
-    PID_Reset(&g_pid);
-  }
-#endif
-
-  /* 5. slow down UART: 200 Hz / PRINT_DIV */
-  if (++print_div >= PRINT_DIV) { print_div = 0; g_print_flag = 1; }
-
-  g_isr_us = (DWT->CYCCNT - t0) / (SystemCoreClock / 1000000U);
+  if (htim->Instance == TIM6) Control_Step();
 }
+
+/**
+  * @brief UART receive complete: one command character arrived.
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  Telemetry_RxCallback(huart);
+}
+
+/**
+  * @brief Blue user button (PA0) toggles the motors, debounced without blocking.
+  */
+static void Button_Poll(void)
+{
+  static uint8_t  prev = 0;
+  static uint32_t last_ms = 0;
+  uint8_t now = (uint8_t)HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+
+  if (now && !prev && (HAL_GetTick() - last_ms) > 250) {
+    last_ms = HAL_GetTick();
+    Control_ToggleArm();
+  }
+  prev = now;
+}
+
 /* USER CODE END 4 */
 
 /**
@@ -763,11 +575,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-    __disable_irq();
-    while (1)
-    {
-    }
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
@@ -781,8 +593,8 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

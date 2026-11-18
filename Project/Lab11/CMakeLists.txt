@@ -45,6 +45,12 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    Core/Src/imu.c
+    Core/Src/angle.c
+    Core/Src/pid.c
+    Core/Src/motor.c
+    Core/Src/control.c
+    Core/Src/telemetry.c
 )
 
 # Add include paths
@@ -61,6 +67,9 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 
 # Add linked libraries
+# printf/snprintf with %f (newlib-nano drops float formatting by default)
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -u _printf_float)
+
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 
